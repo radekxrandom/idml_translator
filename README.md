@@ -18,7 +18,6 @@ requires node.js 18+ and an openai api key.
 
 ```bash
 npm install
-npm run build
 ```
 
 set environment variables:
@@ -56,11 +55,8 @@ vitest with tests for xml parsing, anchor handling, translation injection, and e
 - hardcoded to polish (easily configurable)
 - parallel api calls could hit rate limits on large files
 - no retry logic (fails gracefully to source text)
+- limited amount of tests (i restricted them to only most important behaviors)
 
 ## why hexagonal architecture?
 
-i could've made a quick script, but wanted to show production thinking. clean separation means swapping providers, adding languages, or building a web interface doesn't require rewriting core logic. over-engineered for a cli tool? maybe. but real projects evolve.
-
-## license
-
-isc
+i could've made a quick script, but wanted to show production thinking. clean separation means swapping providers, adding languages, or building a web interface doesn't require rewriting core logic.
