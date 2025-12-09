@@ -1,6 +1,5 @@
 import fs from 'node:fs/promises'
 import path from 'node:path'
-import unzipper from 'unzipper'
 import JSZip from 'jszip'
 import type { StoryModel } from '../../domain/model/StoryModel.js'
 import type { IdmlRepository } from '../../application/ports/IdmlRepository.js'
@@ -19,20 +18,21 @@ export class ZipIdmlRepository implements IdmlRepository {
   loadStories = async (filePath: string): Promise<StoryModel[]> => {
     this.logger.info('reading idml archive', { filePath })
 
-    const directory = await unzipper.Open.file(filePath)
+    const buffer = await fs.readFile(filePath)
+    const zip = await JSZip.loadAsync(buffer)
     const stories: StoryModel[] = []
 
-    for (const file of directory.files) {
-      if (file.type !== 'File') continue
-      if (!file.path.startsWith('Stories/')) continue
-      if (!file.path.endsWith('.xml')) continue
+    const storyEntries = Object.entries(zip.files).filter(
+      ([name, entry]) => !entry.dir && name.startsWith('Stories/') && name.endsWith('.xml')
+    )
 
-      const buffer = await file.buffer()
-      const xml = buffer.toString('utf-8')
-      const id = path.basename(file.path, '.xml')
-
-      stories.push({ id, xml })
-    }
+    await Promise.all(
+      storyEntries.map(async ([name, entry]) => {
+        const xml = await entry.async('string')
+        const id = path.basename(name, '.xml')
+        stories.push({ id, xml })
+      })
+    )
 
     this.logger.debug('loaded stories from idml', { count: stories.length })
     if (this.debugFiles) {
